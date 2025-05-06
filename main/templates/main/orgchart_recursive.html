@@ -1,0 +1,23 @@
+{% comment %} <div class="closure">
+    <div>|</div>
+    <div class="child">{{ orgchart }}</div>
+    <div class="children">
+        {% if orgchart.closure_parent.exists %}
+            {% for closure in orgchart.closure_parent.all %}
+                {% include 'main/orgchart_recursive.html' with orgchart=closure.child %}
+            {% endfor %}
+        {% endif %}
+    </div>
+</div> {% endcomment %}
+
+<li>
+    {{ node.name }}
+    {% if node.children %}
+      <ul>
+        {% for child in node.children %}
+          {% include 'main/orgchart_recursive.html' with node=child %}
+        {% endfor %}
+      </ul>
+    {% endif %}
+  </li>
+  

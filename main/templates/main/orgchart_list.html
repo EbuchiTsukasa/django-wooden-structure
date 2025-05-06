@@ -1,0 +1,28 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{% static 'main/orgchart_list.css' %}">
+    <title>Document</title>
+</head>
+<body>
+    {% comment %} {% for orgchart in object_list %}
+        <div>{{ orgchart }}</div>
+        <div class='corporation'>
+            {% if orgchart.closure_parent.exists %}
+                {% for closure in orgchart.closure_parent.all %}
+                    {% include 'main/orgchart_recursive.html' with orgchart=closure.child %}
+                {% endfor %}
+            {% endif %}
+        </div>
+    {% endfor %} {% endcomment %}
+    <h1>部門ツリー</h1>
+    <ul>
+      {% for node in tree %}
+        {% include 'main/orgchart_recursive.html' with node=node %}
+      {% endfor %}
+    </ul>
+</body>
+</html>

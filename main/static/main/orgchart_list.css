@@ -1,0 +1,11 @@
+.corporation {
+    display: flex;
+}
+
+.children {
+    display: flex;
+}
+
+.child {
+    margin-right: 4px;
+}

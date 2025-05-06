@@ -1,0 +1,22 @@
+{% comment %} <div class="unit">
+    <div>|</div>
+    <div>{{ unit.name }}</div>
+    {% if unit.children.exists %}
+        <div class="children">
+            {% for child in unit.children.all %}
+                {% include 'main/unit_recursive.html' with unit=child %}
+            {% endfor %}    
+        </div>
+    {% endif %}
+</div> {% endcomment %}
+
+{% comment %} existsをなくした {% endcomment %}
+<div class="unit">
+    <div>|</div>
+    <div>{{ unit.name }}</div>
+    <div class="children">
+        {% for child in unit.children.all %}
+            {% include 'main/unit_recursive.html' with unit=child %}
+        {% endfor %}    
+    </div>
+</div>
