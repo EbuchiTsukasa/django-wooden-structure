@@ -9,6 +9,10 @@ class Unit(models.Model):
 
     def __str__(self):
         return self.name
+    
+    class Meta:
+        managed = False  # マテリアライズドビューはDjangoで管理しない
+        db_table = "unit_hierarchy"
 
 # 閉包テーブルモデル
 class OrgChart(models.Model):
