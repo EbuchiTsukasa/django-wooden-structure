@@ -1,0 +1,20 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{% static 'main/unit_list.css' %}">
+    <title>Document</title>
+</head>
+<body>
+    <div class="corporation">
+        <div>{{ root_unit.name }}</div>
+        <div class="unit-list">
+            {% for child in root_unit.children %}
+                {% include 'main/unit_hierarchy_recursive.html' with unit=child %}
+            {% endfor %}
+        </div>
+    </div>
+</body>
+</html>

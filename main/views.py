@@ -2,36 +2,60 @@ from django.shortcuts import render
 from django.db.models import Q
 from django.views.generic import ListView, TemplateView
 
-from .models import Unit, Closure, OrgChart
+from .models import Unit, Closure, OrgChart, UnitHierarchy
 
 from collections import defaultdict
 
 
 # Create your views here.
 
+# class UnitView(ListView):
+#     model = Unit
+
+#     def get_context_data(self, **kwargs):
+#         context = super().get_context_data(**kwargs)
+#         queryset = self.get_queryset()
+#         context["root_unit"] = queryset.filter(parent__isnull=True).first()
+#         return context
+
+#     def get_queryset(self):
+#         max_depth = 5
+#         prefetch_key = self.build_prefetch_related(max_depth)
+#         queryset = Unit.objects.all().prefetch_related(prefetch_key)
+#         return queryset
+    
+#     def build_prefetch_related(self, depth, current_depth=1):
+#         if current_depth > depth:
+#             return ""
+#         children_key = "children"
+#         next_level = self.build_prefetch_related(depth, current_depth + 1)
+#         if next_level:
+#             return f"{children_key}__{next_level}"
+#         return children_key
+    
 class UnitView(ListView):
-    model = Unit
+    model = UnitHierarchy
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        queryset = self.get_queryset()
-        context["root_unit"] = queryset.filter(parent__isnull=True).first()
-        return context
+        units = list(UnitHierarchy.objects.all())
 
-    def get_queryset(self):
-        max_depth = 5
-        prefetch_key = self.build_prefetch_related(max_depth)
-        queryset = Unit.objects.all().prefetch_related(prefetch_key)
-        return queryset
-    
-    def build_prefetch_related(self, depth, current_depth=1):
-        if current_depth > depth:
-            return ""
-        children_key = "children"
-        next_level = self.build_prefetch_related(depth, current_depth + 1)
-        if next_level:
-            return f"{children_key}__{next_level}"
-        return children_key
+        # parent_id→子リスト
+        children_dict = defaultdict(list)
+        for u in units:
+            children_dict[u.parent_id].append(u)
+
+        # 再帰的なツリー構造を作る関数
+        def build_tree(unit):
+            return {
+                'id': unit.id,
+                'name': unit.name,
+                'children': [build_tree(child) for child in children_dict[unit.id]]
+            }
+
+        root_unit = next(u for u in units if u.parent_id is None)
+        context["root_unit"] = build_tree(root_unit)
+        return context
     
 class OrgChartView(TemplateView):
 

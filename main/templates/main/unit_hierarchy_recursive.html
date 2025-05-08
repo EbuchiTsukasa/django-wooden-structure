@@ -1,0 +1,9 @@
+<div class="unit">
+    <div>|</div>
+    <div>{{ unit.name }}</div>
+    <div class="children">
+        {% for child in unit.children %}
+            {% include 'main/unit_hierarchy_recursive.html' with unit=child %}
+        {% endfor %}    
+    </div>
+</div>
