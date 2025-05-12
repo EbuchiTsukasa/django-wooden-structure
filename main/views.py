@@ -9,31 +9,32 @@ from collections import defaultdict
 
 # Create your views here.
 
-# class UnitView(ListView):
-#     model = Unit
-
-#     def get_context_data(self, **kwargs):
-#         context = super().get_context_data(**kwargs)
-#         queryset = self.get_queryset()
-#         context["root_unit"] = queryset.filter(parent__isnull=True).first()
-#         return context
-
-#     def get_queryset(self):
-#         max_depth = 5
-#         prefetch_key = self.build_prefetch_related(max_depth)
-#         queryset = Unit.objects.all().prefetch_related(prefetch_key)
-#         return queryset
-    
-#     def build_prefetch_related(self, depth, current_depth=1):
-#         if current_depth > depth:
-#             return ""
-#         children_key = "children"
-#         next_level = self.build_prefetch_related(depth, current_depth + 1)
-#         if next_level:
-#             return f"{children_key}__{next_level}"
-#         return children_key
-    
 class UnitView(ListView):
+    model = Unit
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        queryset = self.get_queryset()
+        context["root_unit"] = queryset.filter(parent__isnull=True).first()
+        return context
+
+    def get_queryset(self):
+        max_depth = 5
+        prefetch_key = self.build_prefetch_related(max_depth)
+        queryset = Unit.objects.all().prefetch_related(prefetch_key)
+        print("Unitを直接参照した場合の実行計画:", queryset.explain(analyze=True, verbose=True, buffers=True, timing=True, settings=True))
+        return queryset
+    
+    def build_prefetch_related(self, depth, current_depth=1):
+        if current_depth > depth:
+            return ""
+        children_key = "children"
+        next_level = self.build_prefetch_related(depth, current_depth + 1)
+        if next_level:
+            return f"{children_key}__{next_level}"
+        return children_key
+    
+class UnitHierarchyView(ListView):
     model = UnitHierarchy
 
     def get_context_data(self, **kwargs):
