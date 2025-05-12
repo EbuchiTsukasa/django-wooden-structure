@@ -1,5 +1,7 @@
 from django.shortcuts import render
+from django.db import connection
 from django.db.models import Q
+from django.views import View
 from django.views.generic import ListView, TemplateView
 
 from .models import Unit, Closure, OrgChart, UnitHierarchy
@@ -9,30 +11,77 @@ from collections import defaultdict
 
 # Create your views here.
 
-class UnitView(ListView):
-    model = Unit
+# class UnitView(ListView):
+#     model = Unit
 
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        queryset = self.get_queryset()
-        context["root_unit"] = queryset.filter(parent__isnull=True).first()
-        return context
+#     def get_context_data(self, **kwargs):
+#         context = super().get_context_data(**kwargs)
+#         queryset = self.get_queryset()
+#         context["root_unit"] = queryset.filter(parent__isnull=True).first()
+#         return context
 
-    def get_queryset(self):
-        max_depth = 5
-        prefetch_key = self.build_prefetch_related(max_depth)
-        queryset = Unit.objects.all().prefetch_related(prefetch_key)
-        print("Unitを直接参照した場合の実行計画:", queryset.explain(analyze=True, verbose=True, buffers=True, timing=True, settings=True))
-        return queryset
+#     def get_queryset(self):
+#         max_depth = 5
+#         prefetch_key = self.build_prefetch_related(max_depth)
+#         queryset = Unit.objects.all().prefetch_related(prefetch_key)
+#         # print("Unitを直接参照した場合の実行計画:", queryset.explain(analyze=True, verbose=True, buffers=True, timing=True, settings=True))
+#         return queryset
     
-    def build_prefetch_related(self, depth, current_depth=1):
-        if current_depth > depth:
-            return ""
-        children_key = "children"
-        next_level = self.build_prefetch_related(depth, current_depth + 1)
-        if next_level:
-            return f"{children_key}__{next_level}"
-        return children_key
+#     def build_prefetch_related(self, depth, current_depth=1):
+#         if current_depth > depth:
+#             return ""
+#         children_key = "children"
+#         next_level = self.build_prefetch_related(depth, current_depth + 1)
+#         if next_level:
+#             return f"{children_key}__{next_level}"
+#         return children_key
+    
+class UnitView(View):
+    model = Unit
+    template_name = 'main/unit_list.html'
+
+    def get(self, request, *args, **kwargs):
+        # 再帰クエリで全件を一括取得
+        units = self.fetch_units_tree()
+        # unitsを用いてツリー構造を組み立て
+        root_unit = self.build_tree(units)
+        return render(request, self.template_name, {'root_unit': root_unit})
+
+    def fetch_units_tree(self):
+        with connection.cursor() as cursor:
+            cursor.execute("""
+                WITH RECURSIVE root AS (
+                    SELECT id, name, parent_id
+                    FROM main_unit
+                    WHERE parent_id IS NULL
+                    UNION ALL
+                    SELECT child.id, child.name, child.parent_id
+                    FROM root
+                    JOIN main_unit AS child
+                        ON root.id = child.parent_id
+                )
+                SELECT id, name, parent_id FROM root
+            """)
+            rows = cursor.fetchall()
+        # カラム名を合わせる
+        columns = ["id", "name", "parent_id"]
+        return [dict(zip(columns, row)) for row in rows]
+
+    def build_tree(self, units):
+        units_dict = {unit['id']: unit for unit in units}
+        for unit in units:
+            unit['children'] = []
+        root = None
+        for unit in units:
+            if unit['parent_id'] is None:
+                root = unit
+            else:
+                # 親を探す
+                parent = units_dict.get(unit['parent_id'])
+                if parent:
+                    parent['children'].append(unit)
+        return root
+
     
 class UnitHierarchyView(ListView):
     model = UnitHierarchy
