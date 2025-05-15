@@ -9,13 +9,12 @@
 </head>
 <body>
     <div class="corporation">
-
-        <div id="tree-root"></div>
-        <script>
-          // Python側で context["root_unit_json"] = json.dumps(context["root_unit"]) を渡しておく
-          const rootUnit = {{ root_unit_json|safe }};
-        </script>
-        <script src="{% static 'main/js/tree_render.js' %}"></script>
+        <div>{{ root_unit.name }}</div> 
+        <div class="unit-list">
+            {% for child in root_unit.children.all %}
+                {% include 'main/unit_recursive_prefetch.html' with unit=child %}
+            {% endfor %}
+        </div>
     </div>
 </body>
 </html>

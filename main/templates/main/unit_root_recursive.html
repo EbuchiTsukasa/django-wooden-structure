@@ -11,11 +11,8 @@
     <div class="corporation">
         <div>{{ root_unit.name }}</div> 
         <div class="unit-list">
-            {% comment %} {% for child in root_unit.children.all %}
-                {% include 'main/unit_recursive.html' with unit=child %}
-            {% endfor %} {% endcomment %}
             {% for child in root_unit.children %}
-                {% include 'main/unit_recursive.html' with unit=child %}
+                {% include 'main/unit_recursive_recursive.html' with unit=child %}
             {% endfor %}
         </div>
     </div>

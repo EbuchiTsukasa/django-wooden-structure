@@ -1,0 +1,12 @@
+<div class="unit">
+    <div>|</div>
+    <div>{{ unit.name }}</div>
+     <div class="children">
+        {% for child in unit.children.all %}
+            {% include 'main/unit_recursive_prefetch.html' with unit=child %}
+        {% endfor %}
+        {% comment %} {% for child in unit.children %}
+            {% include 'main/unit_recursive_prefetch.html' with unit=child %}
+        {% endfor %} {% endcomment %}
+    </div>
+</div>
